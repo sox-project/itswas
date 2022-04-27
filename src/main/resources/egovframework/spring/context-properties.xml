@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd">
+    
+ 	<!-- 환경설정 기본정보를 globals.properties 에서 참조하도록 propertyConfigurer 설정  -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:/egovframework/egovProps/globals.properties</value>
+            </list>
+        </property>
+    </bean>
+ 
+ 
+ 	<!-- 파일 경로 -->
+ 	<alias name="fileProperties-${Globals.OsType}" alias="fileProperties" />
+ 
+ 	<!-- Windows 환경 -->
+    <bean name="fileProperties-WINDOWS" class="egovframework.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+        <property name="properties">
+            <map>
+	            <entry key="filePath" value="${Globals.WINDOWS.FilePath}"/>
+            </map>
+        </property>
+    </bean>
+    
+    <!-- Linux 환경 -->
+    <bean name="fileProperties-LINUX" class="egovframework.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+        <property name="properties">
+            <map>
+	            <entry key="filePath" value="${Globals.LINUX.FilePath}"/>
+            </map>
+        </property>
+    </bean>
+    
+</beans>    
