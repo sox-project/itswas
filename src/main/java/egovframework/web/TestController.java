@@ -199,15 +199,13 @@ public class TestController {
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/test/kafka")
-	public Map<String, Object> sendKafka(@RequestParam("message") String message) throws InterruptedException, ExecutionException {
-//	@RequestMapping(method = RequestMethod.POST, value = "/test/kafka")
-//	public Map<String, Object> sendKafka(@RequestBody Map<String, String> paramMap) throws InterruptedException, ExecutionException {
+	@RequestMapping(method = RequestMethod.POST, value = "/test/kafka")
+	public Map<String, Object> sendKafka(@RequestBody Map<String, String> paramMap) throws InterruptedException, ExecutionException {
 		Map<String, Object> resultMap = new HashMap<>();
 		
 		String pubTopic = "test_rq_user";
 		String subTopic = "test_rp_user";
-//		String message = paramMap.getOrDefault("message", "");
+		String message = paramMap.getOrDefault("message", "");
 		
 		String result = KafkaUtils.sendAndReceive(pubTopic, message, subTopic);
 		
