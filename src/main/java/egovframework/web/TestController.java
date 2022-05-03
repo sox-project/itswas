@@ -29,6 +29,7 @@ import egovframework.service.TestService;
 import egovframework.utils.DateTimeUtils;
 import egovframework.utils.ExcelUtils;
 import egovframework.utils.FileUtils;
+import egovframework.utils.KafkaUtils;
 import egovframework.utils.WebSocket;
 
 @EnableKafka
@@ -40,9 +41,6 @@ public class TestController {
 	
 	@Resource(name = "fileProperties")
 	private EgovPropertyService fileProperties;
-	
-	@Autowired
-	private KafkaTemplate<String, String> kafkaTemplate;
 	
 	/**
 	 * 로그인
@@ -195,24 +193,27 @@ public class TestController {
 	
 	
 	/**
-	 * topic으로 message를 보냄
+	 * topic으로 message를 보내고 받아옴
 	 * @param paramMap
 	 * @return
 	 * @throws InterruptedException
 	 * @throws ExecutionException
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/test/kafka")
-	public Map<String, Object> sendKafka(@RequestBody Map<String, String> paramMap) throws InterruptedException, ExecutionException {
+	@RequestMapping(method = RequestMethod.GET, value = "/test/kafka")
+	public Map<String, Object> sendKafka(@RequestParam("message") String message) throws InterruptedException, ExecutionException {
+//	@RequestMapping(method = RequestMethod.POST, value = "/test/kafka")
+//	public Map<String, Object> sendKafka(@RequestBody Map<String, String> paramMap) throws InterruptedException, ExecutionException {
 		Map<String, Object> resultMap = new HashMap<>();
 		
-		String topic = "rp_user";
-		String message = paramMap.getOrDefault("message", "");
+		String pubTopic = "test_rq_user";
+		String subTopic = "test_rp_user";
+//		String message = paramMap.getOrDefault("message", "");
 		
-		SendResult<String, String> sendResult = kafkaTemplate.send(topic, message).get();
-		System.out.println(sendResult);
+		String result = KafkaUtils.sendAndReceive(pubTopic, message, subTopic);
 		
-		if (sendResult != null) {
+		if (!"".equals(result)) {
 			resultMap.put("result", "OK");
+			resultMap.put("msg", result);
 		} else {
 			resultMap.put("result", "ERROR");
 			resultMap.put("msg", "다시 시도해주세요.");

@@ -29,6 +29,7 @@
 				<entry key="bootstrap.servers" value="${Globals.Kafka.Server}"/>
 				<entry key="key.deserializer" value="${Globals.Kafka.Deserializer}"/>
 				<entry key="value.deserializer" value="${Globals.Kafka.Deserializer}"/>
+				<entry key="group.id" value="${Globals.Kafka.GroupId}"/>
 				<entry key="auto.offset.reset" value="${Globals.Kafka.auto.offset.reset}"/>
 			</map>
 		</constructor-arg>
@@ -47,4 +48,7 @@
 	<bean id="org.springframework.kafka.config.internalKafkaListenerAnnotationProcessor" class="org.springframework.kafka.annotation.KafkaListenerAnnotationBeanPostProcessor"/>
 	<bean id="org.springframework.kafka.config.internalKafkaListenerEndpointRegistry" class="org.springframework.kafka.config.KafkaListenerEndpointRegistry"/>
 	
+	<bean id="consumer" class="org.apache.kafka.clients.consumer.KafkaConsumer">
+		<constructor-arg ref="consumerProperties"/>
+	</bean>
 </beans>
