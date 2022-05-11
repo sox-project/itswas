@@ -1,8 +1,11 @@
 package egovframework.utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,8 +16,11 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class ExcelUtils {
+	private static final int COLUMN_MAX_COUNT = 15;
 	
 	/**
 	 * 엑셀 파일을 읽어 Map<String, List<List<Object>>> 형태로 반환
@@ -116,4 +122,48 @@ public class ExcelUtils {
 		
 		return excelMap;
 	}
+	
+	
+	/**
+	 * CSV 파일을 읽어 JSON으로 변환
+	 * @param is
+	 * @return
+	 */
+	public static JSONArray readCsvToJson(InputStream is) throws IOException {
+		JSONArray array = new JSONArray();
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+		
+		if (reader.ready()) {
+			// CSV 첫째줄 삭제
+			reader.readLine();
+			
+			while(reader.ready()) {
+				String str = reader.readLine();
+				String[] contents = str.split(",", COLUMN_MAX_COUNT);
+				
+				// TODO : CSV 양식에 따라 content index 변경해야함
+				JSONObject object = new JSONObject();
+				
+				object.put("c_name", contents[1]);
+				object.put("c_id", contents[2]);
+				object.put("c_password", contents[3]);
+				object.put("c_ip", contents[4]);
+				object.put("c_port", contents[5]);
+				object.put("c_rtsp_url", contents[6]);
+				object.put("c_width", contents[7]);
+				object.put("c_height", contents[8]);
+				object.put("c_location", contents[9]);
+				object.put("c_latitude", contents[10]);
+				object.put("c_longitude", contents[11]);
+				object.put("c_description", contents[12]);
+				object.put("c_iw_device_id", contents[13]);
+				
+				array.put(object);
+			}
+		}
+		
+		return array;
+	}
+	
 }
