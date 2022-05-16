@@ -60,7 +60,7 @@ public class AdminController {
 	 * @param paramMap	JSON
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.DELETE, value = "/users/{u_id}")
+	@RequestMapping(method = RequestMethod.POST, value = "/users/{u_id}/delete")
 	public String deleteUser(HttpSession session, @PathVariable("u_id") String userId) {
 		// Request
 		JSONObject reqObject = new JSONObject();
