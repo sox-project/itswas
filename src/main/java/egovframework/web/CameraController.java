@@ -60,7 +60,7 @@ public class CameraController {
 		}
 		
 		resObject.put("data", camArray);
-		resObject.put("res_info", UserController.getHttpResponse());
+		resObject.put("res_info", UserController.getHttpResponse("success", ""));
 		
 		return resObject.toString();
 	}
@@ -88,7 +88,7 @@ public class CameraController {
 		JSONObject resObject = new JSONObject();
 		
 		resObject.put("data", new JSONObject());
-		resObject.put("res_info", UserController.getHttpResponse());
+		resObject.put("res_info", UserController.getHttpResponse("success", ""));
 		
 		return resObject.toString();
 	}
@@ -116,7 +116,7 @@ public class CameraController {
 		JSONObject resObject = new JSONObject();
 		
 		resObject.put("data", new JSONObject());
-		resObject.put("res_info", UserController.getHttpResponse());
+		resObject.put("res_info", UserController.getHttpResponse("success", ""));
 		
 		return resObject.toString();
 	}
@@ -145,7 +145,7 @@ public class CameraController {
 		JSONObject resObject = new JSONObject();
 		
 		resObject.put("data", new JSONObject());
-		resObject.put("res_info", UserController.getHttpResponse());
+		resObject.put("res_info", UserController.getHttpResponse("success", ""));
 		
 		return resObject.toString();
 	}
@@ -179,7 +179,7 @@ public class CameraController {
 		dataObject.put("failure_info", new JSONArray());
 		
 		resObject.put("data", dataObject);
-		resObject.put("res_info", UserController.getHttpResponse());
+		resObject.put("res_info", UserController.getHttpResponse("success", ""));
 		
 		return resObject.toString();
 	}
