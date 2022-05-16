@@ -110,6 +110,38 @@ public class AdminController {
 	
 	
 	/**
+	 * 비밀번호 변경 주기 관련 데이터 목록 조회
+	 * @param session
+	 * @return
+	 */
+	@RequestMapping(method = RequestMethod.GET, value = "/users/password/cycle")
+	public String getPasswordCycle(HttpSession session) {
+		// Request
+		JSONObject reqObject = new JSONObject();
+		
+		reqObject.put("data", new JSONObject());
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		
+		System.out.println("비밀번호 변경 주기 관련 데이터 목록 조회 : " + reqObject.toString());
+		
+		
+		// Response
+		JSONObject resObject = new JSONObject();
+		JSONObject dataObject = new JSONObject();
+		
+		dataObject.put("c_idx", 1);
+		dataObject.put("c_pw_change_cycle", 90);
+		dataObject.put("c_pw_change_alert", 10);
+		dataObject.put("c_pw_change_use", true);
+		
+		resObject.put("data", dataObject);
+		resObject.put("res_info", UserController.getHttpResponse());
+		
+		return resObject.toString();
+	}
+	
+	
+	/**
 	 * 비밀번호 변경 주기 변경
 	 * @param session
 	 * @param params
