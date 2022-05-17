@@ -12,6 +12,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class KafkaUtils {
+	private static final String REQUEST_TOPIC_PATTERN = "rq_";
+	private static final String RESPONSE_TOPIC_PATTERN = "rp_";
+	
 	private static KafkaTemplate<String, String> kafkaTemplate;
 	private static Consumer<String, String> consumer;
 	
@@ -24,17 +27,18 @@ public class KafkaUtils {
 	
 	/**
 	 * pubTopic으로 Message를 보내고, subTopic에서 Message를 받아옴
-	 * @param pubTopic
+	 * @param topicName		Kafka Topic 이름
 	 * @param sendMessage
-	 * @param subTopic
 	 * @return
 	 */
-	public static String sendAndReceive(String pubTopic, String sendMessage, String subTopic) {
+	public static String sendAndReceive(String topicName, String sendMessage) {
 		String result = "";
+		
+		String pubTopic = REQUEST_TOPIC_PATTERN + topicName;
+		String subTopic = RESPONSE_TOPIC_PATTERN + topicName;
 		
 		// pubTopic으로 Message를 보냄
 		kafkaTemplate.send(pubTopic, sendMessage);
-		System.out.println("Send Message - " + sendMessage + " / Time : " + DateTimeUtils.getDateTimeNow(DateTimeUtils.DATETIME_DEFAULT_PATTERN + ".SSS"));
 		
 		// subTopic을 구독
 		consumer.subscribe(Arrays.asList(subTopic));
@@ -46,7 +50,6 @@ public class KafkaUtils {
 			
 			for (ConsumerRecord<String, String> record : records) {
 				result = record.value();
-				System.out.println("Receive record : " + record.value() + " / Time : " + DateTimeUtils.getDateTimeNow(DateTimeUtils.DATETIME_DEFAULT_PATTERN + ".SSS"));
 			}
 			
 			count++;
