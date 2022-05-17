@@ -2,7 +2,6 @@ package egovframework.web;
 
 import javax.servlet.http.HttpSession;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import egovframework.utils.KafkaUtils;
 import egovframework.utils.SessionUtils;
 
 @RestController
@@ -30,28 +30,11 @@ public class AdminController {
 		
 		System.out.println("사용자 목록 조회 : " + reqObject.toString());
 		
-		
 		// Response
-		JSONObject resObject = new JSONObject();
-		JSONArray userArray = new JSONArray();
+		String topicName = "user_alist";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		for (int i = 1; i <= 10; i++) {
-			JSONObject userObject = new JSONObject();
-			
-			userObject.put("u_idx", i);
-			userObject.put("u_id", "user_" + i);
-			userObject.put("u_password", "MGZkZWE0NTBjNmNi");
-			userObject.put("u_name", "사용자" + i);
-			userObject.put("p_code", 1);
-			userObject.put("p_description", "General");
-			
-			userArray.put(userObject);
-		}
-		
-		resObject.put("data", userArray);
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}	
 	
 	
@@ -75,12 +58,10 @@ public class AdminController {
 		
 		
 		// Response
-		JSONObject resObject = new JSONObject();
+		String topicName = "del_user"; 
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		resObject.put("data", new JSONObject());
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
@@ -100,12 +81,10 @@ public class AdminController {
 		
 		
 		// Response
-		JSONObject resObject = new JSONObject();
+		String topicName = "chan_permission";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		resObject.put("data", new JSONObject());
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
@@ -126,18 +105,10 @@ public class AdminController {
 		
 		
 		// Response
-		JSONObject resObject = new JSONObject();
-		JSONObject dataObject = new JSONObject();
+		String topicName = "password_cycle_list";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		dataObject.put("c_idx", 1);
-		dataObject.put("c_pw_change_cycle", 90);
-		dataObject.put("c_pw_change_alert", 10);
-		dataObject.put("c_pw_change_use", true);
-		
-		resObject.put("data", dataObject);
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
@@ -160,11 +131,10 @@ public class AdminController {
 		
 		
 		// Response
-		JSONObject resObject = new JSONObject();
-		resObject.put("data", new JSONObject());
-		resObject.put("res_info", UserController.getHttpResponse());
+		String topicName = "chan_pw_cycle";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 }

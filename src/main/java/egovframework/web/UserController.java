@@ -1,14 +1,15 @@
 package egovframework.web;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.json.JSONObject;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import egovframework.utils.KafkaUtils;
 import egovframework.utils.SessionUtils;
 
 @RestController
@@ -31,28 +32,46 @@ public class UserController {
 	
 	
 	/**
+	 * 임시 : 사용자 인증, 로그인 시 입력받은 데이터를 세션에 넣음
+	 * @return
+	 */
+	@RequestMapping(method = RequestMethod.POST, value = "/users/auth")
+	public String login(HttpSession session, HttpServletRequest request, @RequestBody String params) {
+		JSONObject paramObject = new JSONObject(params.toString());
+		
+		SessionUtils.setUser(session, request, paramObject);
+		
+		return SessionUtils.getUser(session).toString();
+	}
+	
+	
+	/**
 	 * 사용자 등록
 	 * @param params	JSON
 	 * @return
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/users")
-	public String setUser(@RequestBody String params) {
+	public String setUser(HttpServletRequest request, @RequestBody String params) {
 		// Request
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject(params.toString());
+		JSONObject infoObject = new JSONObject();
+		
+		// 입력받은 데이터를 Request 정보로 보냄
+		infoObject.put("req_id", paramObject.has("u_id")? paramObject.get("u_id") : "");
+		infoObject.put("req_name", paramObject.has("u_name")? paramObject.get("u_name") : "");
+		infoObject.put("req_ip", request.getRemoteAddr());
 		
 		reqObject.put("data", paramObject);
+		reqObject.put("req_info", infoObject);
 		
 		System.out.println("사용자 등록 : " + reqObject.toString());
 		
-		
 		// Response
-		JSONObject resObject = new JSONObject();
+		String topicName = "add_user";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		resObject.put("data", new JSONObject());
-		resObject.put("res_info", getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
@@ -76,16 +95,17 @@ public class UserController {
 		
 		
 		// Response
-		JSONObject resObject = new JSONObject();
+		String topicName = "mod_user";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		resObject.put("data", new JSONObject());
-		resObject.put("res_info", getHttpResponse());
+		JSONObject resObject = new JSONObject(receiveMsg);
+		if ("success".equals(resObject.getString("result"))) {
+			// Response가 제대로 오면, 세션에 저장된 이름 변경
+			String userName = paramObject.getString("u_name");
+			SessionUtils.setUserName(session, userName);	
+		}
 		
-		// Response가 제대로 오면, 세션에 저장된 이름 변경
-		String userName = paramObject.getString("u_name");
-		SessionUtils.setUserName(session, userName);
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
@@ -108,20 +128,10 @@ public class UserController {
 		
 		
 		// Response
-		JSONObject resObject = new JSONObject();
-		JSONObject userObject = new JSONObject();
+		String topicName = "user_info";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		userObject.put("u_idx", 1);
-		userObject.put("u_id", "user_1");
-		userObject.put("u_password", "MGZkZWE0NTBjNmNi");
-		userObject.put("u_name", "사용자01");
-		userObject.put("p_code", 1);
-		userObject.put("p_description", "General");
-		
-		resObject.put("data", userObject);
-		resObject.put("res_info", getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
@@ -144,12 +154,10 @@ public class UserController {
 		
 		
 		// Response
-		JSONObject resObject = new JSONObject();
+		String topicName = "mod_pw";
+		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
 		
-		resObject.put("data", new JSONObject());
-		resObject.put("res_info", getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 }
