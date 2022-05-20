@@ -170,13 +170,18 @@ public class UserController {
 	 * 특정 사용자 프로필 조회 : 본인 프로필을 보는 기능
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/user/me")
-	public String getUserInfo(HttpSession session) {
+	@RequestMapping(method = RequestMethod.GET, value = {"/users/", "/users/{u_id}"})
+	public String getUserInfo(HttpSession session, @PathVariable(value = "u_id", required = false) String userId) {
 		// Request
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
 		
-		paramObject.put("u_id", SessionUtils.getUserId(session));
+		// 본인 프로필 조회
+		if (userId == null) {
+			userId = SessionUtils.getUserId(session);
+		}
+
+		paramObject.put("u_id", userId);
 		
 		reqObject.put("data", paramObject);
 		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
