@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.json.JSONObject;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -113,13 +114,18 @@ public class UserController {
 	 * 특정 사용자 프로필 조회
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/user/me")
-	public String getUserInfo(HttpSession session) {
+	@RequestMapping(method = RequestMethod.GET, value = {"/users/", "/users/{u_id}"})
+	public String getUserInfo(HttpSession session, @PathVariable(value = "u_id", required = false) String userId) {
 		// Request
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
 		
-		paramObject.put("u_id", SessionUtils.getUserId(session));
+		// 본인 프로필 조회
+		if (userId == null) {
+			userId = SessionUtils.getUserId(session);
+		}
+		
+		paramObject.put("u_id", userId);
 		
 		reqObject.put("data", paramObject);
 		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
