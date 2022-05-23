@@ -93,12 +93,17 @@ public class UserController {
 	 * 특정 사용자 프로필 조회
 	 * @return
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/users/{u_id}")
-	public String getUserInfo(HttpSession session, @PathVariable("u_id") String userId) {
+	@RequestMapping(method = RequestMethod.GET, value = {"/users/", "/users/{u_id}"})
+	public String getUserInfo(HttpSession session, @PathVariable(value = "u_id", required = false) String userId) {
 		// Request
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
-		
+
+		// 본인 프로필 조회
+		if (userId == null) {
+			userId = SessionUtils.getUserId(session);
+		}
+
 		paramObject.put("u_id", userId);
 		
 		reqObject.put("data", paramObject);
