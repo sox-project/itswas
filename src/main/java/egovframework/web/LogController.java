@@ -120,4 +120,48 @@ public class LogController {
 		
 		return resObject.toString();
 	}
+	
+	
+	/**
+	 * 사용자 접속 통계 조회
+	 * @param session
+	 * @param userId		검색할 사용자
+	 * @param startDate		로그 검색을 위해 조회 필터에서 설정한 로그 검색 시작 일시
+	 * @param endDate		로그 검색을 위해 조회 필터에서 설정한 로그 검색 종료 일시
+	 * @return
+	 */
+	@RequestMapping(method = RequestMethod.GET, value = {"/logs/login/statistics", "/logs/login/statistics/{user_id}"})
+	public String getLoginLog(HttpSession session,
+			@PathVariable(name = "user_id", required = false) String userId,
+			@RequestParam(name = "start_date", required = false) String startDate,
+			@RequestParam(name = "end_date", required = false) String endDate) {
+		// Request
+		JSONObject reqObject = new JSONObject();
+		JSONObject paramObject = new JSONObject();
+		
+		paramObject.put("user_id", userId != null? userId : "");
+		paramObject.put("start_date", startDate);
+		paramObject.put("end_date", endDate);
+		
+		reqObject.put("data", paramObject);
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		
+		System.out.println("사용자 접속 통계 조회 : " + reqObject.toString());
+		
+		
+		// Response 
+		JSONObject resObject = new JSONObject();
+		JSONObject dataObject = new JSONObject();
+		
+		dataObject.put("20220101", "0");
+		dataObject.put("20220102", "2");
+		dataObject.put("20220103", "5");
+		dataObject.put("20220104", "3");
+		dataObject.put("20220105", "6");
+		
+		resObject.put("data", dataObject);
+		resObject.put("res_info", UserController.getHttpResponse());
+		
+		return resObject.toString();
+	}
 }
