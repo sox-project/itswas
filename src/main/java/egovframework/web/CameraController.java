@@ -25,11 +25,17 @@ public class CameraController {
 	 * @return
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/cams")
-	public String getCameraList(HttpSession session) {
+	public String getCameraList(HttpSession session,
+			@RequestParam("f_device_name") String deviceName,
+			@RequestParam("f_device_location") String deviceLocation) {
 		// Request
 		JSONObject reqObject = new JSONObject();
+		JSONObject paramObject = new JSONObject();
 		
-		reqObject.put("data", new JSONObject());
+		paramObject.put("f_device_name", deviceName);
+		paramObject.put("f_device_location", deviceLocation);
+		
+		reqObject.put("data", paramObject);
 		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
 		
 		System.out.println("장비 목록 조회 : " + reqObject.toString());
