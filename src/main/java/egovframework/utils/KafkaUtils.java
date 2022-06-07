@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -74,5 +75,24 @@ public class KafkaUtils {
 		String encodeUuid = object.getJSONObject("res_info").getString("res_key");
 		
 		receiveMap.put(Base64Utils.decode(encodeUuid), value);
+	}
+	
+	
+	/**
+	 * 사용자 관리용 암호화 Public Key 요청
+	 * @param uuid
+	 * @param message
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public static String getPublicKey(String uuid, String message) throws InterruptedException {
+		String topic = "user_public_key";
+		
+		System.out.println("사용자 관리용 암호화 Public Key 요청 : " + message);
+		
+		// Response
+		String receiveMsg = sendAndReceive(uuid, topic, message);
+		
+		return receiveMsg;
 	}
 }
