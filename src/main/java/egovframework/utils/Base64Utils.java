@@ -2,8 +2,6 @@ package egovframework.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
-import java.util.Base64.Decoder;
-import java.util.Base64.Encoder;
 
 public class Base64Utils {
 	
@@ -15,8 +13,11 @@ public class Base64Utils {
 		return encode(str.getBytes()); 
 	}
 	
-	public static String decode(String str) throws UnsupportedEncodingException {
-		return new String(Base64.getDecoder().decode(str));
+	public static byte[] decode(String str) {
+		return Base64.getDecoder().decode(str);
 	}
 	
+	public static String decodeToString(String str) throws UnsupportedEncodingException {
+		return new String(decode(str));
+	}
 }

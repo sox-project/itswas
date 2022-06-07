@@ -74,7 +74,7 @@ public class KafkaUtils {
 		JSONObject object = new JSONObject(value);
 		String encodeUuid = object.getJSONObject("res_info").getString("res_key");
 		
-		receiveMap.put(Base64Utils.decode(encodeUuid), value);
+		receiveMap.put(Base64Utils.decodeToString(encodeUuid), value);
 	}
 	
 	
