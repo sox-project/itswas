@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -79,7 +78,7 @@ public class KafkaUtils {
 	
 	
 	/**
-	 * 사용자 관리용 암호화 Public Key 요청
+	 * [BCITS-AIAS-IF-008] 사용자 관리용 암호화 Public Key 요청
 	 * @param uuid
 	 * @param message
 	 * @return
@@ -89,6 +88,25 @@ public class KafkaUtils {
 		String topic = "user_public_key";
 		
 		System.out.println("사용자 관리용 암호화 Public Key 요청 : " + message);
+		
+		// Response
+		String receiveMsg = sendAndReceive(uuid, topic, message);
+		
+		return receiveMsg;
+	}
+	
+	
+	/**
+	 * [BCITS-AIAS-IF-019] Public Key 요청
+	 * @param uuid
+	 * @param message
+	 * @return
+	 * @throws InterruptedException 
+	 */
+	public static String getAuthPublicKey(String uuid, String message) throws InterruptedException {
+		String topic = "auth_public_key";
+		
+		System.out.println("Public Key 요청 : " + message);
 		
 		// Response
 		String receiveMsg = sendAndReceive(uuid, topic, message);
