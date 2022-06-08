@@ -13,6 +13,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 @Component
 public class KafkaUtils {
 	private static final String REQUEST_TOPIC_PATTERN = "rq_";
@@ -83,14 +86,16 @@ public class KafkaUtils {
 	 * @param message
 	 * @return
 	 * @throws InterruptedException
+	 * @throws JsonProcessingException 
+	 * @throws JsonMappingException 
 	 */
-	public static String getPublicKey(String uuid, String message) throws InterruptedException {
+	public static String getPublicKey(String uuid, JSONObject reqObject) throws InterruptedException, JsonMappingException, JsonProcessingException {
 		String topic = "user_public_key";
 		
-		System.out.println("사용자 관리용 암호화 Public Key 요청 : " + message);
+		PrintUtils.printRequest("[BCITS-AIAS-IF-008] 사용자 관리용 암호화 Public Key 요청", reqObject);
 		
 		// Response
-		String receiveMsg = sendAndReceive(uuid, topic, message);
+		String receiveMsg = sendAndReceive(uuid, topic, reqObject.toString());
 		
 		return receiveMsg;
 	}
