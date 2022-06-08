@@ -1,8 +1,11 @@
 package egovframework.utils;
 
+import java.io.UnsupportedEncodingException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SessionUtils {
@@ -14,6 +17,7 @@ public class SessionUtils {
 	private static final String REQUEST_KEY_USER_ID = "req_id";
 	private static final String REQUEST_KEY_USER_NAME = "req_name";
 	private static final String REQUEST_KEY_USER_IP = "req_ip";
+	private static final String REQUEST_KEY_UUID = "req_key";
 	
 	
 	/**
@@ -130,13 +134,16 @@ public class SessionUtils {
 	 * 세션에서 Request로 보낼 데이터 가져오기
 	 * @param session
 	 * @return
+	 * @throws UnsupportedEncodingException 
+	 * @throws JSONException 
 	 */
-	public static JSONObject getRequestInfo(HttpSession session) {
+	public static JSONObject getRequestInfo(HttpSession session, String uuid) throws JSONException, UnsupportedEncodingException {
 		JSONObject reqObject = new JSONObject();
 
 		reqObject.put(REQUEST_KEY_USER_ID, getUserId(session));
 		reqObject.put(REQUEST_KEY_USER_NAME, getUserName(session));
 		reqObject.put(REQUEST_KEY_USER_IP, getUserIp(session));
+		reqObject.put(REQUEST_KEY_UUID, Base64Utils.encode(uuid));
 	
 		return reqObject;
 	}
