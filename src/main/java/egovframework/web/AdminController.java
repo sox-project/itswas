@@ -17,6 +17,7 @@ import egovframework.utils.SessionUtils;
 /**
  * 사용자 관리
  * [BCITS-AIAS-IF-001] 사용자 조회 				{@link #getUserList(HttpSession)}
+ * [BCITS-AIAS-IF-004] 사용자 삭제				{@link #deleteUser(HttpSession, String)}
  */
 @RestController
 public class AdminController {
@@ -47,27 +48,28 @@ public class AdminController {
 	
 	
 	/**
-	 * 사용자 삭제
-	 * @param paramMap	JSON
+	 * [BCITS-AIAS-IF-004] 사용자 삭제
+	 * @param session
+	 * @param userId
 	 * @return
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/users/{u_id}/delete")
-	public String deleteUser(HttpSession session, @PathVariable("u_id") String userId) {
+	public String deleteUser(HttpSession session, @PathVariable("u_id") String userId) throws Exception {
 		// Request
+		String topic = "del_user";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
-		
 		paramObject.put("u_id", userId);
 		
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
-		
-		System.out.println("사용자 삭제 : " + reqObject.toString());
-		
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
+
+		PrintUtils.printRequest("[BCITS-AIAS-IF-004] 사용자 삭제", reqObject);
 		
 		// Response
-		String topicName = "del_user"; 
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
 		return receiveMsg;
 	}
