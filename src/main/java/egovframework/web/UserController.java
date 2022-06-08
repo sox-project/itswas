@@ -33,9 +33,9 @@ import egovframework.utils.SessionUtils;
 
 /**
  * 사용자 관리
- * [BCITS-AIAS-IF-002] 사용자 등록
- * 
- *
+ * [BCITS-AIAS-IF-002] 사용자 등록 {@link #login(HttpSession, HttpServletRequest, String)}
+ * [BCITS-AIAS-IF-003] 사용자 수정 {@link #updateUser(HttpSession, String)}
+ * [BCITS-AIAS-IF-005] 특정 사용자 프로필 조회 {@link #getUserInfo(HttpSession, String)}
  */
 @RestController
 public class UserController {
@@ -180,12 +180,20 @@ public class UserController {
 	
 	
 	/**
-	 * 특정 사용자 프로필 조회
+	 * [BCITS-AIAS-IF-005] 특정 사용자 프로필 조회
 	 * @return
+	 * @throws UnsupportedEncodingException 
+	 * @throws JSONException 
+	 * @throws JsonProcessingException 
+	 * @throws JsonMappingException 
+	 * @throws InterruptedException 
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = {"/users/", "/users/{u_id}"})
-	public String getUserInfo(HttpSession session, @PathVariable(value = "u_id", required = false) String userId) {
+	public String getUserInfo(HttpSession session, @PathVariable(value = "u_id", required = false) String userId) throws JSONException, UnsupportedEncodingException, JsonMappingException, JsonProcessingException, InterruptedException {
 		// Request
+		String topic = "user_info";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
 		
@@ -197,14 +205,12 @@ public class UserController {
 		paramObject.put("u_id", userId);
 		
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("특정 사용자 프로필 조회 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-005] 특정 사용자 프로필 조회", reqObject);
 		
 		// Response
-		String topicName = "user_info";
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
 		return receiveMsg;
 	}
