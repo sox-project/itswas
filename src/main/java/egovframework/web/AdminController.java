@@ -10,29 +10,37 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import egovframework.utils.KafkaUtils;
+import egovframework.utils.KeyUtils;
+import egovframework.utils.PrintUtils;
 import egovframework.utils.SessionUtils;
 
+/**
+ * 사용자 관리
+ * [BCITS-AIAS-IF-001] 사용자 조회 				{@link #getUserList(HttpSession)}
+ */
 @RestController
 public class AdminController {
 	
 	/**
-	 * 사용자 목록 조회
+	 * [BCITS-AIAS-IF-001] 사용자 조회
 	 * @param session
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/users")
-	public String getUserList(HttpSession session) {
+	public String getUserList(HttpSession session) throws Exception {
 		// Request
+		String topic = "user_alist";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
-		
 		reqObject.put("data", new JSONObject());
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("사용자 목록 조회 : " + reqObject.toString());
+		PrintUtils.printRequest("[BCITS-AIAS-IF-001] 사용자 조회", reqObject);
 		
 		// Response
-		String topicName = "user_alist";
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
 		return receiveMsg;
 	}	
