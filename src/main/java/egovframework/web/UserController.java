@@ -1,8 +1,18 @@
 package egovframework.web;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.json.Json;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,9 +20,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
+import egovframework.utils.Base64Utils;
+import egovframework.utils.CipherUtils;
 import egovframework.utils.KafkaUtils;
+import egovframework.utils.KeyUtils;
+import egovframework.utils.PrintUtils;
 import egovframework.utils.SessionUtils;
 
+/**
+ * 사용자 관리
+ * [BCITS-AIAS-IF-002] 사용자 등록
+ * 
+ *
+ */
 @RestController
 public class UserController {
 	
@@ -47,31 +71,67 @@ public class UserController {
 	
 	
 	/**
-	 * 사용자 등록
+	 * [BCITS-AIAS-IF-002] 사용자 등록
 	 * @param params	JSON
 	 * @return
+	 * @throws UnsupportedEncodingException 
+	 * @throws JSONException 
+	 * @throws InterruptedException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws NoSuchPaddingException 
+	 * @throws InvalidKeySpecException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidKeyException 
+	 * @throws JsonProcessingException 
+	 * @throws JsonMappingException 
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/users")
-	public String setUser(HttpServletRequest request, @RequestBody String params) {
+	public String setUser(HttpServletRequest request, @RequestBody String params) throws JSONException, UnsupportedEncodingException, InterruptedException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, JsonMappingException, JsonProcessingException {
 		// Request
+		String topic = "add_user";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
-		JSONObject paramObject = new JSONObject(params.toString());
+		JSONObject paramObject = new JSONObject(params);
 		JSONObject infoObject = new JSONObject();
 		
-		// 입력받은 데이터를 Request 정보로 보냄
-		infoObject.put("req_id", paramObject.has("u_id")? paramObject.get("u_id") : "");
-		infoObject.put("req_name", paramObject.has("u_name")? paramObject.get("u_name") : "");
 		infoObject.put("req_ip", request.getRemoteAddr());
+		infoObject.put("req_key", Base64Utils.encode(uuid));
 		
-		reqObject.put("data", paramObject);
+		JSONObject pubObject = new JSONObject();
+		pubObject.put("u_id", paramObject.getString("u_id"));
+		
+		reqObject.put("data", pubObject);
 		reqObject.put("req_info", infoObject);
 		
-		System.out.println("사용자 등록 : " + reqObject.toString());
-		
-		// Response
-		String topicName = "add_user";
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
-		
+		// 사용자 관리용 암호화 Public Key 요청
+		String receiveMsg = KafkaUtils.getPublicKey(uuid, reqObject);
+		if (!"".equals(receiveMsg)) {
+			JSONObject resObject = new JSONObject(receiveMsg);
+			String result = resObject.getJSONObject("res_info").getString("result");
+			if ("success".equals(result)) {
+				String password = paramObject.getString("u_password");
+				String publicKey = resObject.getJSONObject("data").getString("public_key");
+				
+				// 비밀번호 RSA 암호화
+				String encryptedPswd = CipherUtils.encryptRSA(password, publicKey);
+				
+				paramObject.put("u_password", encryptedPswd);
+				
+				infoObject.put("req_id", paramObject.getString("u_id"));
+				infoObject.put("req_name", paramObject.getString("u_name"));
+				
+				reqObject.put("data", paramObject);
+				reqObject.put("req_info", infoObject);
+				
+				PrintUtils.printRequest("[BCITS-AIAS-IF-002] 사용자 등록", reqObject);
+				
+				// Response
+				receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
+			}
+		}
+
 		return receiveMsg;
 	}
 	
