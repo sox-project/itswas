@@ -137,33 +137,42 @@ public class UserController {
 	
 	
 	/**
-	 * 사용자 정보 수정
-	 * @param paramMap	JSON
+	 * [BCITS-AIAS-IF-003] 사용자 정보 수정
+	 * @param param
 	 * @return
+	 * @throws UnsupportedEncodingException 
+	 * @throws JSONException 
+	 * @throws JsonProcessingException 
+	 * @throws JsonMappingException 
+	 * @throws InterruptedException 
 	 */
 	@RequestMapping(method = RequestMethod.PUT, value = "/users")
-	public String updateUser(HttpSession session, @RequestBody String params) {
+	public String updateUser(HttpSession session, @RequestBody String params) throws JSONException, UnsupportedEncodingException, JsonMappingException, JsonProcessingException, InterruptedException {
 		// Request
+		String topic = "mod_user";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject(params);
 		
 		paramObject.put("u_id", SessionUtils.getUserId(session));
 		
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("사용자 정보 수정 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-003] 사용자 정보 수정", reqObject);
 		
 		// Response
-		String topicName = "mod_user";
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
-		
-		JSONObject resObject = new JSONObject(receiveMsg);
-		if ("success".equals(resObject.getString("result"))) {
-			// Response가 제대로 오면, 세션에 저장된 이름 변경
-			String userName = paramObject.getString("u_name");
-			SessionUtils.setUserName(session, userName);	
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
+		if (!"".equals(receiveMsg)) {
+			JSONObject resObject = new JSONObject(receiveMsg);
+			String result = resObject.getJSONObject("res_info").getString("result");
+			if ("success".equals(result)) {
+				// 세션에 저장된 이름 변경
+				String userName = paramObject.getString("u_name");
+				
+				SessionUtils.setUserName(session, userName);
+			}
 		}
 		
 		return receiveMsg;
