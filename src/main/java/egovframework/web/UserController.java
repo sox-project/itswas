@@ -8,7 +8,6 @@ import java.security.spec.InvalidKeySpecException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.json.Json;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
@@ -22,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectWriter;
 
 import egovframework.utils.Base64Utils;
 import egovframework.utils.CipherUtils;
@@ -36,6 +34,7 @@ import egovframework.utils.SessionUtils;
  * [BCITS-AIAS-IF-002] 사용자 등록 {@link #login(HttpSession, HttpServletRequest, String)}
  * [BCITS-AIAS-IF-003] 사용자 수정 {@link #updateUser(HttpSession, String)}
  * [BCITS-AIAS-IF-005] 특정 사용자 프로필 조회 {@link #getUserInfo(HttpSession, String)}
+ * [BCITS-AIAS-IF-006] 사용자 비밀번호 변경 {@link #updateUserPassword(HttpSession, String)}
  */
 @RestController
 public class UserController {
@@ -217,28 +216,51 @@ public class UserController {
 	
 	
 	/**
-	 * 사용자 비밀번호 변경
+	 * [BCITS-AIAS-IF-006] 사용자 비밀번호 변경
+	 * @param session
+	 * @param params
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.PUT, value = "/users/password")
-	public String updateUserPassword(HttpSession session, @RequestBody String params) {
+	public String updateUserPassword(HttpSession session, @RequestBody String params) throws Exception {
 		// Request
+		String topic = "mod_pw";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
-		JSONObject paramObject = new JSONObject(params);
+		JSONObject pubObject = new JSONObject();
 		
-		paramObject.put("u_id", SessionUtils.getUserId(session));
+		String userId = SessionUtils.getUserId(session);
+		pubObject.put("u_id", userId);
 		
-		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("data", pubObject);
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("사용자 비밀번호 변경 : " + reqObject.toString());
-		
-		
-		// Response
-		String topicName = "mod_pw";
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
+		// 사용자 관리용 암호화 Public Key 요청
+		String receiveMsg = KafkaUtils.getPublicKey(uuid, reqObject);
+		if (!"".equals(receiveMsg)) {
+			JSONObject paramObject = new JSONObject(params);
+			JSONObject resObject = new JSONObject(receiveMsg);
+			String result = resObject.getJSONObject("res_info").getString("result");
+			if ("success".equals(result)) {
+				String curPswd = paramObject.getString("current_password");
+				String chaPswd = paramObject.getString("change_password");
+				String publicKey = resObject.getJSONObject("data").getString("public_key");
+				
+				paramObject.put("u_id", userId);
+				paramObject.put("current_password", CipherUtils.encryptRSA(curPswd, publicKey));
+				paramObject.put("change_password", CipherUtils.encryptRSA(chaPswd, publicKey));
+				
+				reqObject.put("data", paramObject);
+				
+				PrintUtils.printRequest("[BCITS-AIAS-IF-006] 사용자 비밀번호 변경", reqObject);
+				
+				// Response
+				receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
+			}	
+		}
 		
 		return receiveMsg;
 	}
-	
 }
