@@ -6,7 +6,7 @@ import java.util.Base64;
 public class Base64Utils {
 	
 	public static String encode(byte[] strBytes) {
-		return Base64.getEncoder().withoutPadding().encodeToString(strBytes);
+		return Base64.getEncoder().encodeToString(strBytes);
 	}
 	
 	public static String encode(String str) throws UnsupportedEncodingException {
