@@ -31,43 +31,16 @@ import egovframework.utils.SessionUtils;
 
 /**
  * 사용자 관리
- * [BCITS-AIAS-IF-002] 사용자 등록 {@link #login(HttpSession, HttpServletRequest, String)}
- * [BCITS-AIAS-IF-003] 사용자 수정 {@link #updateUser(HttpSession, String)}
- * [BCITS-AIAS-IF-005] 특정 사용자 프로필 조회 {@link #getUserInfo(HttpSession, String)}
- * [BCITS-AIAS-IF-006] 사용자 비밀번호 변경 {@link #updateUserPassword(HttpSession, String)}
+ * [BCITS-AIAS-IF-002] 사용자 등록 				{@link #setUser(HttpServletRequest, String)}
+ * [BCITS-AIAS-IF-003] 사용자 수정 				{@link #updateUser(HttpSession, String)}
+ * [BCITS-AIAS-IF-005] 특정 사용자 프로필 조회 		{@link #getUserInfo(HttpSession, String)}
+ * [BCITS-AIAS-IF-006] 사용자 비밀번호 변경 		{@link #updateUserPassword(HttpSession, String)}
+ * 
+ * 사용자 인증
+ * [BCITS-AIAS-IF-020] 로그인 					{@link #login(HttpSession, HttpServletRequest, String)}
  */
 @RestController
 public class UserController {
-	
-	/**
-	 * 임시 : HTTP Handler (HTTP 200 반환)
-	 * @return
-	 */
-	public static JSONObject getHttpResponse() {
-		JSONObject resObject = new JSONObject();
-		
-		resObject.put("data", System.currentTimeMillis() / 1000);
-		resObject.put("code", 200);
-		resObject.put("result", "success");
-		resObject.put("message", "");
-		
-		return resObject;
-	}
-	
-	
-	/**
-	 * 임시 : 사용자 인증, 로그인 시 입력받은 데이터를 세션에 넣음
-	 * @return
-	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/users/auth")
-	public String login(HttpSession session, HttpServletRequest request, @RequestBody String params) {
-		JSONObject paramObject = new JSONObject(params.toString());
-		
-		SessionUtils.setUser(session, request, paramObject);
-		
-		return SessionUtils.getUser(session).toString();
-	}
-	
 	
 	/**
 	 * [BCITS-AIAS-IF-002] 사용자 등록
@@ -259,6 +232,75 @@ public class UserController {
 				// Response
 				receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 			}	
+		}
+		
+		return receiveMsg;
+	}
+	
+	
+	/**
+	 * [BCITS-AIAS-IT-020] 로그인
+	 * @param session
+	 * @param request
+	 * @param params
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(method = RequestMethod.POST, value = "/users/auth")
+	public String login(HttpSession session, HttpServletRequest request, @RequestBody String params) throws Exception {
+		// Request
+		String topic = "auth_user";
+		String uuid = KeyUtils.getUUID();
+		
+		JSONObject reqObject = new JSONObject();
+		JSONObject paramObject = new JSONObject(params);
+		JSONObject infoObject = new JSONObject();
+		infoObject.put("req_id", "");
+		infoObject.put("req_name", "");
+		infoObject.put("req_ip", request.getRemoteAddr());
+		infoObject.put("req_key", Base64Utils.encode(uuid));
+		
+		JSONObject pubObject = new JSONObject();
+		pubObject.put("u_id", paramObject.getString("u_id"));
+		
+		reqObject.put("data", pubObject);
+		reqObject.put("req_info", infoObject);
+		
+		// Public Key 요청
+		String receiveMsg = KafkaUtils.getAuthPublicKey(uuid, reqObject);
+		if (!"".equals(receiveMsg)) {
+			JSONObject resObject = new JSONObject(receiveMsg);
+			String result = resObject.getJSONObject("res_info").getString("result");
+			if ("success".equals(result)) {
+				String password = paramObject.getString("u_password");
+				String publicKey = resObject.getJSONObject("data").getString("public_key");
+				
+				String encryptedPswd = CipherUtils.encryptRSA(password, publicKey);
+				paramObject.put("u_password", encryptedPswd);
+				
+				reqObject.put("data", paramObject);
+				
+				PrintUtils.printRequest("[BCITS-AIAS-IF-020] 로그인", reqObject);
+				
+				// Response
+				receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
+			} else {
+				return receiveMsg;
+			}		
+		} else {
+			return receiveMsg;
+		}
+		
+		// 로그인 확인
+		if (!"".equals(receiveMsg)) {
+			JSONObject resObject = new JSONObject(receiveMsg);
+			String result = resObject.getJSONObject("res_info").getString("result");
+			if ("success".equals(result)) {
+				JSONObject userObject = resObject.getJSONObject("data");
+				
+				// 세션에 유저 정보 입력
+				SessionUtils.setUser(session, request, userObject);
+			}
 		}
 		
 		return receiveMsg;
