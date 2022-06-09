@@ -2,7 +2,6 @@ package egovframework.web;
 
 import javax.servlet.http.HttpSession;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +18,7 @@ import egovframework.utils.SessionUtils;
  * 로그 이력 관리
  * [BCITS-AIAS-IF-016] 로그 필터 코드 값 조회
  * [BCITS-AIAS-IF-017] 운영 로그 이력 조회
+ * [BCITS-AIAS-IF-018] 사용자 접속 통계 조회
  */
 @RestController
 public class LogController {
@@ -91,45 +91,37 @@ public class LogController {
 	
 	
 	/**
-	 * 사용자 접속 통계 조회
+	 * [BCITS-AIAS-IF-018] 사용자 접속 통계 조회
 	 * @param session
 	 * @param userId		검색할 사용자
 	 * @param startDate		로그 검색을 위해 조회 필터에서 설정한 로그 검색 시작 일시
 	 * @param endDate		로그 검색을 위해 조회 필터에서 설정한 로그 검색 종료 일시
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = {"/logs/login/statistics", "/logs/login/statistics/{user_id}"})
 	public String getLoginLog(HttpSession session,
 			@PathVariable(name = "user_id", required = false) String userId,
-			@RequestParam(name = "start_date", required = false) String startDate,
-			@RequestParam(name = "end_date", required = false) String endDate) {
+			@RequestParam(name = "start_date") String startDate,
+			@RequestParam(name = "end_date") String endDate) throws Exception {
 		// Request
+		String topic = "statistics_userdata";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
-		
 		paramObject.put("user_id", userId != null? userId : "");
 		paramObject.put("start_date", startDate);
 		paramObject.put("end_date", endDate);
 		
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("사용자 접속 통계 조회 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-018] 사용자 접속 통계 조회", reqObject);
 		
 		// Response 
-		JSONObject resObject = new JSONObject();
-		JSONObject dataObject = new JSONObject();
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
-		dataObject.put("20220101", "0");
-		dataObject.put("20220102", "2");
-		dataObject.put("20220103", "5");
-		dataObject.put("20220104", "3");
-		dataObject.put("20220105", "6");
-		
-		resObject.put("data", dataObject);
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 }
