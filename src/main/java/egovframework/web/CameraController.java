@@ -23,6 +23,7 @@ import egovframework.utils.SessionUtils;
  * 장비 관리
  * [BCITS-AIAS-IF-011] 장비 목록 조회	{@link #getCameraList(HttpSession, String, String)}
  * [BCITS-AIAS-IF-012] 장비 등록		{@link #setCamera(HttpSession, String)}
+ * [BCITS-AIAS-IF-013] 장비 수정		{@link #updateCamera(HttpSession, String)}
  */
 @RestController
 public class CameraController {
@@ -89,30 +90,30 @@ public class CameraController {
 	
 	
 	/**
-	 * 장비 수정
+	 * [BCITS-AIAS-IF-013] 장비 수정
 	 * @param session
 	 * @param params
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.PUT, value = "/cams")
-	public String updateCamera(HttpSession session, @RequestBody String params) {
+	public String updateCamera(HttpSession session, @RequestBody String params) throws Exception {
 		// Request
+		String topic = "mod_cam";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject(params);
 		
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("장비 수정 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-013] 장비 수정", reqObject);
 		
 		// Response
-		JSONObject resObject = new JSONObject();
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
-		resObject.put("data", new JSONObject());
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
