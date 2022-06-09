@@ -22,6 +22,7 @@ import egovframework.utils.SessionUtils;
  * 
  * 공통 설정 관리
  * [BCITS-AIAS-IF-009] 비밀번호 변경 주기 관련 데이터 목록 조회							{@link #getPasswordCycle(HttpSession)}
+ * [BCITS-AIAS-IF-010] 비밀번호 변경 주기 / 알람 주기 설정 / 비밀번호 변경 주기 사용 설정		{@link #UpdatePasswordCycle(HttpSession, String)}
  */
 @RestController
 public class AdminController {
@@ -132,26 +133,27 @@ public class AdminController {
 	
 	
 	/**
-	 * 비밀번호 변경 주기 변경
+	 * [BCITS-AIAS-IF-010] 비밀번호 변경 주기 / 알람 주기 설정 / 비밀번호 변경 주기 사용 설정
 	 * @param session
 	 * @param params
 	 * @return
 	 */
 	@RequestMapping(method = RequestMethod.PUT, value = "/users/password/cycle")
-	public String UpdatePasswordCycle(HttpSession session, @RequestBody String params) {
+	public String UpdatePasswordCycle(HttpSession session, @RequestBody String params) throws Exception {
 		// Request
+		String topic = "chan_pw_cycle";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject(params);
 		
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("비밀번호 주기 변경 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-010] 비밀번호 변경 주기 / 알람 주기 설정 / 비밀번호 변경 주기 사용 설정", reqObject);
 		
 		// Response
-		String topicName = "chan_pw_cycle";
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
 		return receiveMsg;
 	}
