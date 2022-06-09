@@ -83,11 +83,11 @@ public class KafkaUtils {
 	/**
 	 * [BCITS-AIAS-IF-008] 사용자 관리용 암호화 Public Key 요청
 	 * @param uuid
-	 * @param message
+	 * @param reqObject
 	 * @return
 	 * @throws InterruptedException
-	 * @throws JsonProcessingException 
-	 * @throws JsonMappingException 
+	 * @throws JsonMappingException
+	 * @throws JsonProcessingException
 	 */
 	public static String getPublicKey(String uuid, JSONObject reqObject) throws InterruptedException, JsonMappingException, JsonProcessingException {
 		String topic = "user_public_key";
@@ -104,17 +104,19 @@ public class KafkaUtils {
 	/**
 	 * [BCITS-AIAS-IF-019] Public Key 요청
 	 * @param uuid
-	 * @param message
+	 * @param reqObject
 	 * @return
-	 * @throws InterruptedException 
+	 * @throws InterruptedException
+	 * @throws JsonMappingException
+	 * @throws JsonProcessingException
 	 */
-	public static String getAuthPublicKey(String uuid, String message) throws InterruptedException {
+	public static String getAuthPublicKey(String uuid, JSONObject reqObject) throws InterruptedException, JsonMappingException, JsonProcessingException {
 		String topic = "auth_public_key";
 		
-		System.out.println("Public Key 요청 : " + message);
+		PrintUtils.printRequest("[BCITS-AIAS-IF-019] Public Key 요청", reqObject);
 		
 		// Response
-		String receiveMsg = sendAndReceive(uuid, topic, message);
+		String receiveMsg = sendAndReceive(uuid, topic, reqObject.toString());
 		
 		return receiveMsg;
 	}
