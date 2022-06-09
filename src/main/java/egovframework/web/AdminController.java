@@ -16,9 +16,12 @@ import egovframework.utils.SessionUtils;
 
 /**
  * 사용자 관리
- * [BCITS-AIAS-IF-001] 사용자 조회 				{@link #getUserList(HttpSession)}
- * [BCITS-AIAS-IF-004] 사용자 삭제				{@link #deleteUser(HttpSession, String)}
- * [BCITS-AIAS-IF-007] 사용자 권한 변경			{@link #updateUserPermission(HttpSession, String)}
+ * [BCITS-AIAS-IF-001] 사용자 조회 												{@link #getUserList(HttpSession)}
+ * [BCITS-AIAS-IF-004] 사용자 삭제												{@link #deleteUser(HttpSession, String)}
+ * [BCITS-AIAS-IF-007] 사용자 권한 변경											{@link #updateUserPermission(HttpSession, String)}
+ * 
+ * 공통 설정 관리
+ * [BCITS-AIAS-IF-009] 비밀번호 변경 주기 관련 데이터 목록 조회							{@link #getPasswordCycle(HttpSession)}
  */
 @RestController
 public class AdminController {
@@ -104,24 +107,25 @@ public class AdminController {
 	
 	
 	/**
-	 * 비밀번호 변경 주기 관련 데이터 목록 조회
+	 * [BCITS-AIAS-IF-009] 비밀번호 변경 주기 관련 데이터 목록 조회
 	 * @param session
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/users/password/cycle")
-	public String getPasswordCycle(HttpSession session) {
+	public String getPasswordCycle(HttpSession session) throws Exception {
 		// Request
+		String topic = "password_cycle_list";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
-		
 		reqObject.put("data", new JSONObject());
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("비밀번호 변경 주기 관련 데이터 목록 조회 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-009] 비밀번호 변경 주기 관련 데이터 목록 조회", reqObject);
 		
 		// Response
-		String topicName = "password_cycle_list";
-		String receiveMsg = KafkaUtils.sendAndReceive(topicName, reqObject.toString());
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
 		return receiveMsg;
 	}
