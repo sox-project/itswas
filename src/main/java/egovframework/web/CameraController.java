@@ -14,61 +14,48 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import egovframework.utils.ExcelUtils;
+import egovframework.utils.KafkaUtils;
+import egovframework.utils.KeyUtils;
+import egovframework.utils.PrintUtils;
 import egovframework.utils.SessionUtils;
 
+/**
+ * 장비 관리
+ * [BCITS-AIAS-IF-011] 장비 목록 조회	{@link #getCameraList(HttpSession, String, String)}
+ */
 @RestController
 public class CameraController {
 
 	/**
-	 * 장비 목록 조회
+	 * [BCITS-AIAS-IF-011] 장비 목록 조회
 	 * @param session
+	 * @param deviceName		사용자가 조회 필터를 통해 입력한 장비 이름 정보
+	 * @param deviceLocation	사용자가 조회 필터를 통해 입력한 장비 설치 위치 정보
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/cams")
 	public String getCameraList(HttpSession session,
-			@RequestParam("f_device_name") String deviceName,
-			@RequestParam("f_device_location") String deviceLocation) {
+			@RequestParam(name = "f_device_name", required = false) String deviceName,
+			@RequestParam(name = "f_device_location", required = false) String deviceLocation) throws Exception {
 		// Request
+		String topic = "cam_list";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
-		
 		paramObject.put("f_device_name", deviceName);
 		paramObject.put("f_device_location", deviceLocation);
 		
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("장비 목록 조회 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-011] 장비 목록 조회", reqObject);
 		
 		// Response
-		JSONObject resObject = new JSONObject();
-		JSONArray camArray = new JSONArray();
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
-		for (int i = 1; i <= 10; i++) {
-			JSONObject camObject = new JSONObject();
-			
-			camObject.put("c_idx", i);
-			camObject.put("c_name", "cam_" + i);
-			camObject.put("c_id", "amdin");
-			camObject.put("c_password", "cam1234");
-			camObject.put("c_ip", "10.110.1.11");
-			camObject.put("c_port", 5700);
-			camObject.put("c_rtsp_url", "rtsp://...");
-			camObject.put("c_width", 1920);
-			camObject.put("c_height", 1080);
-			camObject.put("c_location", "가나구 다라동 마바사 사거리");
-			camObject.put("c_latitude", "37.487744");
-			camObject.put("c_longitude", "127.031916");
-			camObject.put("c_description", "가나구 다라동 마바사 사거리에 설치된 CCTV");
-			
-			camArray.put(camObject);
-		}
-		
-		resObject.put("data", camArray);
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
