@@ -10,48 +10,40 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import egovframework.utils.KafkaUtils;
+import egovframework.utils.KeyUtils;
+import egovframework.utils.PrintUtils;
 import egovframework.utils.SessionUtils;
 
+/**
+ * 로그 이력 관리
+ * [BCITS-AIAS-IF-016] 로그 필터 코드 값 조회
+ */
 @RestController
 public class LogController {
 
 	/**
-	 * 로그 필터 코드 값 조회
+	 * [BCITS-AIAS-IF-016] 로그 필터 코드 값 조회
 	 * @param session
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/logs/type")
-	public String getLogType(HttpSession session) {
+	public String getLogType(HttpSession session) throws Exception {
 		// Request 
+		String topic = "logtype_list";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
-		
 		reqObject.put("data", new JSONObject());
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("로그 필터 코드 값 조회 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-016] 로그 필터 코드 값 조회", reqObject);
 		
 		// Response
-		JSONObject resObject = new JSONObject();
-		JSONArray typeArray = new JSONArray();
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
-		String[] subTypes = {"user_management", "device_management"};
-		String[] actions = {"add", "modify"};
-		
-		for (int i = 0; i < 2; i++) {
-			JSONObject typeObject = new JSONObject();
-			
-			typeObject.put("l_type", "operate");
-			typeObject.put("l_sub_type", subTypes[i]);
-			typeObject.put("l_action", actions[i]);
-			
-			typeArray.put(typeObject);
-		}
-		
-		resObject.put("data", typeArray);
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
