@@ -18,6 +18,7 @@ import egovframework.utils.SessionUtils;
 /**
  * 로그 이력 관리
  * [BCITS-AIAS-IF-016] 로그 필터 코드 값 조회
+ * [BCITS-AIAS-IF-017] 운영 로그 이력 조회
  */
 @RestController
 public class LogController {
@@ -48,25 +49,29 @@ public class LogController {
 	
 	
 	/**
-	 * 운영 로그 이력 조회
+	 * [BCITS-AIAS-IF-017] 운영 로그 이력 조회
+	 * @param session
 	 * @param userId		해당 동작을 실행한 사용자 아이디
 	 * @param subType		운영 로그 종류
 	 * @param action		운영 로그 종류에 대한 동작
 	 * @param startDate		로그 검색을 위해 조회 필터에서 설정한 로그 검색 시작 일시
 	 * @param endDate		로그 검색을 위해 조회 필터에서 설정한 로그 검색 종료 일시
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = {"/logs/operation", "/logs/operation/{user_id}"})
 	public String getOperationLog(HttpSession session,
 			@PathVariable(name = "user_id", required = false) String userId, 
 			@RequestParam(name = "sub_type", required = false, defaultValue = "") String subType,
 			@RequestParam(name = "action", required = false, defaultValue = "") String action,
-			@RequestParam(name = "start_date", required = false) String startDate,
-			@RequestParam(name = "end_date", required = false) String endDate) {
+			@RequestParam(name = "start_date") String startDate,
+			@RequestParam(name = "end_date") String endDate) throws Exception {
 		// Request
+		String topic = "operation_loglist";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
-		
 		paramObject.put("user_id", userId != null? userId : "");
 		paramObject.put("sub_type", subType);
 		paramObject.put("action", action);
@@ -74,43 +79,14 @@ public class LogController {
 		paramObject.put("end_date", endDate);
 
 		reqObject.put("data", paramObject);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("운영 로그 이력 조회 : " + reqObject.toString());
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-017] 운영 로그 이력 조회", reqObject);
 		
 		// Response
-		JSONObject resObject = new JSONObject();
-		JSONArray logArray = new JSONArray();
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
-		String[] message = {
-				"password cycle: 10 -> 90 alert cycle: 10 -> 7",
-				"password cycle: 90 -> 45",
-				"password cycle: 45 -> 30 alert cycle: 7 -> 5 operates: True -> False",
-				"password cycle: 30 -> 90 alert cycle: 5 -> 10 operates: False -> True"
-		};
-		
-		for (int i = 0; i < 4; i++) {
-			JSONObject logObject = new JSONObject();
-			JSONObject infoObject = new JSONObject();
-			
-			infoObject.put("user_id", userId);
-			infoObject.put("user_name", "관리자01");
-			infoObject.put("source_ip", "10.0.5.33");
-			infoObject.put("action", action);
-			infoObject.put("message", message[i]);
-
-			logObject.put("infomation", infoObject);
-			logObject.put("sub_type", subType);
-			logObject.put("date", String.valueOf(System.currentTimeMillis() / 1000));
-			
-			logArray.put(logObject);
-		}
-		
-		resObject.put("data", logArray);
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
 	
 	
