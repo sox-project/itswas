@@ -1,7 +1,5 @@
 package egovframework.web;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpSession;
 
 import org.json.JSONArray;
@@ -25,6 +23,7 @@ import egovframework.utils.SessionUtils;
  * [BCITS-AIAS-IF-012] 장비 등록		{@link #setCamera(HttpSession, String)}
  * [BCITS-AIAS-IF-013] 장비 수정		{@link #updateCamera(HttpSession, String)}
  * [BCITS-AIAS-IF-014] 장비 삭제		{@link #deleteCamera(HttpSession, String)}
+ * [BCITS-AIAS-IF-015] 장비 업로드		{@link #setCameraList(HttpSession, MultipartFile)}
  */
 @RestController
 public class CameraController {
@@ -148,36 +147,29 @@ public class CameraController {
 	
 	
 	/**
-	 * 장비 업로드 (.csv)
+	 * [BCITS-AIAS-IF-015] 장비 업로드
 	 * @param session
 	 * @param uploadFile
 	 * @return
+	 * @throws Exception
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/cams/file")
-	public String setCameraList(HttpSession session, @RequestParam("file") MultipartFile uploadFile) throws IOException {
+	public String setCameraList(HttpSession session, @RequestParam("file") MultipartFile uploadFile) throws Exception {
 		// Request
+		String topic = "upload_cam";
+		String uuid = KeyUtils.getUUID();
+		
 		JSONObject reqObject = new JSONObject();
 		JSONArray cameraArray = ExcelUtils.readCsvToJson(uploadFile.getInputStream());
 		
 		reqObject.put("data", cameraArray);
-		reqObject.put("req_info", SessionUtils.getRequestInfo(session));
+		reqObject.put("req_info", SessionUtils.getRequestInfo(session, uuid));
 		
-		System.out.println("장비 업로드 : " + reqObject.toString());
-		
-		
+		PrintUtils.printRequest("[BCITS-AIAS-IF-015] 장비 업로드", reqObject);
+
 		// Response
-		JSONObject resObject = new JSONObject();
-		JSONObject dataObject = new JSONObject();
+		String receiveMsg = KafkaUtils.sendAndReceive(uuid, topic, reqObject.toString());
 		
-		dataObject.put("result", "success");
-		dataObject.put("complete_count", cameraArray.length());
-		dataObject.put("failure_count", 0);
-		dataObject.put("failure_info", new JSONArray());
-		
-		resObject.put("data", dataObject);
-		resObject.put("res_info", UserController.getHttpResponse());
-		
-		return resObject.toString();
+		return receiveMsg;
 	}
-	
 }
