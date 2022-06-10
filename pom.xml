@@ -124,7 +124,7 @@
 			<version>2.5.0</version>
 		</dependency>
 
-        <!-- MySQL 설정 -->
+<!--         MySQL 설정
         <dependency>
             <groupId>com.googlecode.log4jdbc</groupId>
             <artifactId>log4jdbc</artifactId>
@@ -147,7 +147,7 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.31</version>
-        </dependency>
+        </dependency> -->
         
         <!-- Rest API result data binding -->
 		<dependency>
