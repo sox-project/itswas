@@ -26,8 +26,8 @@ public class CameraController {
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/cams")
 	public String getCameraList(HttpSession session,
-			@RequestParam("f_device_name") String deviceName,
-			@RequestParam("f_device_location") String deviceLocation) {
+			@RequestParam(name = "f_device_name", required = false) String deviceName,
+			@RequestParam(name = "f_device_location", required = false) String deviceLocation) {
 		// Request
 		JSONObject reqObject = new JSONObject();
 		JSONObject paramObject = new JSONObject();
